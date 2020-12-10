@@ -1,0 +1,136 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Thu Dec  3 08:14:09 2020
+
+@author: louis
+"""
+from random import choice
+from tkinter import *
+import unicodedata
+
+def MotAleatoire(): #Fonction générant le mot
+    fich=open('mots.txt','r') #Ouverture du fichier
+    l=fich.readlines() #extraction des données
+    fich.close() #fermeture du fichier
+    mot=""
+    while len(mot)<4:
+        mot=choice(l)
+        mot=mot.strip("\n")
+    mot=mot.lower()
+    mot=''.join((c for c in unicodedata.normalize('NFD', mot) if unicodedata.category(c) != 'Mn'))
+    return(mot)
+    
+
+
+def Affichage(erreur): #Fonction affichage avec les différents stade du pendu
+    if erreur == 0:
+        item=Canevas.create_image(300,300,anchor=SE,image=image1)
+    if erreur == 1:
+        item=Canevas.create_image(300,300,anchor=SE,image=image2)
+    if erreur == 2:
+        item=Canevas.create_image(300,300,anchor=SE,image=image3)
+    if erreur == 3:
+        item=Canevas.create_image(300,300,anchor=SE,image=image4)
+    if erreur == 4:
+        item=Canevas.create_image(300,300,anchor=SE,image=image5)
+    if erreur == 5 :
+        item=Canevas.create_image(300,300,anchor=SE,image=image6)
+    if erreur == 6 : 
+        item=Canevas.create_image(300,300,anchor=SE,image=image7)
+    if erreur == 7:
+        item=Canevas.create_image(300,300,anchor=SE,image=image8)
+    
+    
+def Resultat(mot,trouvées):
+    resultat=''
+    for i in mot:
+        if i in trouvées:
+            resultat+=i
+        else:
+            resultat+='_'
+    return(resultat)
+        
+def Rejouer():
+    global trouvee,mot,vie
+    mot=MotAleatoire()
+    trouvee=mot[0]
+    vie=7
+    return(trouvee,mot,vie)
+    
+def Pendu(score=0):
+    global vie,trouvee,mot,message
+    resultat=Resultat(mot,trouvee)
+    Affichage(7-vie) # affichage du pendu
+    essai=Entrée.get()
+        
+    if essai not in mot: #si c'est faux
+        vie-=1 #on enlève une vie
+        message.set("La lettre n'était pas dans le mot. Vous perdez une vie.")
+    else:
+        if essai in resultat[1:]: 
+            message.set("Lettre déja entrée. Rééssayez") 
+        else:
+            trouvee.append(essai)
+            resultat=Resultat(mot,trouvee)
+            message.set("Lettre trouvée. Continuez") 
+    if vie == 0:
+        message.set("Vous avez perdu. Vous avez obtenu un score de  : "+str(score)) 
+    else:
+        message.set("Vous avez gagné. Vous avez obtenu un score de  : "+str(score))
+            
+            
+fenetre=Tk()
+fenetre.title('Jeu du pendu')
+fenetre['bg']='bisque'
+image1=PhotoImage(master=fenetre,file='bonhomme1.gif')
+image2=PhotoImage(master=fenetre,file='bonhomme2.gif')
+image3=PhotoImage(master=fenetre,file='bonhomme3.gif')        
+image4=PhotoImage(master=fenetre,file='bonhomme4.gif')        
+image5=PhotoImage(master=fenetre,file='bonhomme5.gif')        
+image6=PhotoImage(master=fenetre,file='bonhomme6.gif')
+image7=PhotoImage(master=fenetre,file='bonhomme7.gif')
+image8=PhotoImage(master=fenetre,file='bonhomme8.gif')     
+
+mot=MotAleatoire() #mot aléatoire
+trouvee=[mot[0]]
+resultat=Resultat(mot,trouvee)
+vie=7
+
+Canevas=Canvas(fenetre,height=300,width=300,bg='blue')
+item=Canevas.create_image(150,150,image=image1)
+
+proposition=StringVar()
+Entrée=Entry(fenetre,textvariable=proposition)
+
+message=StringVar()
+MessageCaractereInformatif=Label(fenetre, textvariable=message,fg='black',bg='white')
+
+
+BoutonProposer=Button(fenetre,text="Proposer Lettre",command=Pendu())
+BoutonRejouer=Button(fenetre,text='Rejouer',command=Rejouer())
+BoutonDestroy=Button(fenetre,text='Quitter le jeu',command=fenetre.destroy)
+
+resultat=StringVar()
+resultat.set(Resultat(mot,trouvee))
+LabelResultat=Label(fenetre,textvariable=resultat,fg='black',bg='white')
+
+Lvie=StringVar()
+Lvie.set("Il vous reste : "+str(vie)+" vies")
+LabelVie=Label(fenetre,textvariable=Lvie,fg='black',bg='white')
+
+
+LabelVie.grid(row=1)
+LabelResultat.grid(row=2)
+
+
+
+
+Entrée.grid(row=3)
+MessageCaractereInformatif.grid(row=7,column=2)
+Canevas.grid(row=1,column=2,rowspan=6)
+BoutonProposer.grid(row=4)
+BoutonRejouer.grid(row=5)
+BoutonDestroy.grid(row=6)
+
+[trouvee,mot,vie]=Rejouer()
+fenetre.mainloop()
